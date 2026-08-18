@@ -371,7 +371,7 @@ function loadMainPage(username) {
   });
 
   logoutBtn.addEventListener('click', () => {
-    Localstorage.removeItem('nexus_user');
+    LocalStorage.removeItem('nexus_user');
     location.reload();
   });
 }
