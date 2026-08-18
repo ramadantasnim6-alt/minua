@@ -2,7 +2,7 @@
 // --- 1. CHECK PERSISTENT LOGIN ON PAGE LOAD ---
 let savedUser = null;
 try {
-  savedUser = localStorage.getItem('nexus_user');
+  savedUser = localStorage.getItem('nexus_user') || sessionStorage.getItem('nexus_user');
 } catch (e) {
   console.warn('Storage access blocked:', e);
 }
@@ -361,6 +361,36 @@ function loadMainPage(username) {
   });
 
   document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      saveProfileState();
+    }
+  });
+
+  // --- ADD THIS RIGHT UNDER YOUR EXISTING MOUSE LOGIC ---
+  square.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.profile-bio') || e.target.closest('.profile-image-container')) return;
+    isDragging = true;
+    const touch = e.touches[0];
+    startX = touch.clientX - square.offsetLeft;
+    startY = touch.clientY - square.offsetTop;
+  }, { passive: false });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    e.preventDefault(); // Stop screen from scrolling while dragging
+    const touch = e.touches[0];
+    let newX = touch.clientX - startX;
+    let newY = touch.clientY - startY;
+
+    const maxX = bigBox.clientWidth - square.clientWidth;
+    const maxY = bigBox.clientHeight - square.clientHeight;
+
+    square.style.left = `${Math.max(0, Math.min(newX, maxX))}px`;
+    square.style.top = `${Math.max(0, Math.min(newY, maxY))}px`;
+  }, { passive: false });
+
+  document.addEventListener('touchend', () => {
     if (isDragging) {
       isDragging = false;
       saveProfileState();
