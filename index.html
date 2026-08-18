@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MinuaChat</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="homepage-container">
+    <div class="brand-section">
+      <div class="logo">
+        <span class="logo-icon">💬</span>
+        <h1>MinuaChat</h1>
+      </div>
+      <p class="tagline">A whole new way to hang out, chat, and connect with friends online. Completely custom, completely yours.</p>
+      <div class="features-list">
+        <div class="feature-item">✨ Real-time messaging vibes</div>
+        <div class="feature-item">🎨 Unique custom themes</div>
+        <div class="feature-item">🚀 Built right in the browser</div>
+      </div>
+    </div>
+
+    <div class="action-card">
+      
+      <div id="welcome-view" class="view">
+        <h2>Welcome!</h2>
+        <p>Ready to jump into the community? Choose an option below to begin.</p>
+        <div class="button-row">
+          <button id="go-to-signup" class="btn-primary">Get Started</button>
+          <button id="go-to-login" class="btn-secondary">Log In</button>
+        </div>
+      </div>
+
+      <div id="signup-view" class="view hidden">
+        <h2>Create Account</h2>
+        <p>Join the community and start chatting.</p>
+        
+        <form id="signup-form">
+          <div class="input-group">
+            <label for="su-email">Email</label>
+            <input type="email" id="su-email" placeholder="you@example.com" required>
+          </div>
+
+          <div class="input-group">
+            <label for="su-user">Username</label>
+            <input type="text" id="su-user" placeholder="CoolCoder99" required autocomplete="off">
+          </div>
+
+          <div class="input-group">
+            <label for="su-pass">Create Password</label>
+            <input type="password" id="su-pass" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" class="btn-primary">Sign Up & Enter</button>
+        </form>
+
+        <button class="btn-back" id="back-from-signup">← Back</button>
+      </div>
+
+      <div id="login-view" class="view hidden">
+        <h2>Welcome Back</h2>
+        <p>Log in to access your account.</p>
+        
+        <form id="login-form">
+          <div class="input-group">
+            <label for="li-email">Email</label>
+            <input type="email" id="li-email" placeholder="you@example.com" required>
+          </div>
+
+          <div class="input-group">
+            <label for="li-pass">Password</label>
+            <input type="password" id="li-pass" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" class="btn-primary">Log In & Enter</button>
+        </form>
+
+        <button class="btn-back" id="back-from-login">← Back</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
