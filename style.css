@@ -18,7 +18,7 @@ body {
 }
 
 .homepage-container {
-  display: grid;
+  display: column;
   grid-template-columns: 1.2fr 1fr;
   width: 900px;
   max-width: 90%;
@@ -76,12 +76,13 @@ body {
 }
 
 .action-card {
-  background: #1f222b;
+  background: #1f224b;
   padding: 50px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border-left: 1px solid #262935;
+  width: 100%;
+  border-top: 3px solid #262935;
 }
 
 .view h2 {
