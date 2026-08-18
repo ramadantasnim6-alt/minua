@@ -1,16 +1,17 @@
 // --- 1. HOME PAGE VIEW SWITCHING ---
-// Check if user is logged in on page load
-if (localStorage.getItem('isLoggedIn') === 'true') {
-  // Show logged in UI (Replace '.action-card' with your main container class if different)
-  const actionCard = document.querySelector('.action-card');
-  if (actionCard) {
-    actionCard.innerHTML = `
-      <div class="view">
-        <h2>Welcome Back!</h2>
-        <p>You are logged in.</p>
-        <button onclick="logout()" class="btn-secondary">Log Out</button>
-      </div>
-    `;
+// --- 1. CHECK PERSISTENT LOGIN ON PAGE LOAD ---
+let savedUser = null;
+try {
+  savedUser = localStorage.getItem('nexus_user');
+} catch (e) {
+  console.warn('Storage access blocked:', e);
+}
+
+if (savedUser) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => loadMainPage(savedUser));
+  } else {
+    loadMainPage(savedUser);
   }
 }
 const welcomeView = document.getElementById('welcome-view');
