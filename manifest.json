@@ -1,0 +1,8 @@
+{
+  "name": "MinuaChat",
+  "short_name": "MinuaChat",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff"
+}
