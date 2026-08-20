@@ -23,7 +23,7 @@ const goToLoginBtn = document.getElementById('go-to-login');
 const backFromSignup = document.getElementById('back-from-signup');
 const backFromLogin = document.getElementById('back-from-login');
 
-const loginForm = document.getElementById('login-form');
+const loginForm = getElementById('login-form');
 
 if (goToSignupBtn) {
   goToSignupBtn.addEventListener('click', () => {
@@ -231,7 +231,7 @@ function loadMainPage(username) {
     .btn-secondary-custom:hover { background: #e5e7eb; }
     .btn-primary-custom { padding: 12px; background: #6366f1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
     .btn-primary-custom:hover { background: #4f46e5; }
-    .big-box { width: 90vw; height: 90vh; border: 2px solid #000000; border-radius: 12px; position: relative; overflow: hidden; transition: background 0.2s; }
+    .big-box { width: 97vw; height: 90vh; border: 2px solid #000000; border-radius: 1px; position: relative; overflow: hidden; transition: background 0.2s; }
     .draggable-square { width: 200px; height: 240px; border: 2px solid #000000; border-radius: 12px; position: absolute; cursor: grab; display: flex; flex-direction: column; align-items: center; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); transition: background 0.2s; }
     .draggable-square:active { cursor: grabbing; }
     .profile-image-container { width: 70px; height: 70px; background: #ffffff; border: 2px dashed #333333; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; overflow: hidden; margin-bottom: 12px; flex-shrink: 0; transition: border-color 0.2s; }
