@@ -1,4 +1,3 @@
-// Paste this at the VERY TOP of script.js
 var firebaseConfig = {
   apiKey: "AIzaSyBC8ukohMx1yqiKWMPRmBHmUt_aYnyy2bM",
   authDomain: "minua-95068.firebaseapp.com",
@@ -10,16 +9,14 @@ var firebaseConfig = {
   measurementId: "G-6MWLFWK5T4"
 };
 
-// Initialize Firebase
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 var auth = firebase.auth();
 var db = firebase.database();
 
-let currentRoomCode = null;
+var currentRoomCode = null;
 
-// --- 1. AUTH STATE & AUTO-LOGIN ---
 var savedUser = null;
 try {
   savedUser = localStorage.getItem('nexus_user');
@@ -34,12 +31,10 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-// Helper validation
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// --- 2. LOGIN / SIGNUP EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
   const welcomeView = document.getElementById('welcome-view');
   const signupView = document.getElementById('signup-view');
@@ -81,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Handle Login
   if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -101,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Handle Sign Up
   if (signupForm) {
     signupForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -132,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// --- 3. MAIN PAGE BUILDER ---
 function loadMainPage(username) {
   const body = document.querySelector('body');
   
@@ -229,8 +221,8 @@ function loadMainPage(username) {
     .custom-section input[type="color"] { width: 100%; height: 40px; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; background: none; padding: 2px; }
     .btn-primary-custom { padding: 12px; background: #6366f1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
     .btn-primary-custom:hover { background: #4f46e5; }
-    .big-box { width: 97vw; height: 90vh; border: 2px solid #000000; border-radius: 1px; position: relative; overflow: hidden; transition: background 0.2s; }
-    .draggable-square { width: 200px; height: 240px; border: 2px solid #000000; border-radius: 1px; position: absolute; cursor: grab; display: flex; flex-direction: column; align-items: center; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); transition: background 0.2s; }
+    .big-box { width: 97vw; height: 90vh; border: 2px solid #000000; border-radius: 1px; position: relative; overflow: hidden; transition: background 0.2s; touch-action: none; }
+    .draggable-square { width: 200px; height: 240px; border: 2px solid #000000; border-radius: 1px; position: absolute; cursor: grab; display: flex; flex-direction: column; align-items: center; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); transition: background 0.2s; touch-action: none; }
     .draggable-square:active { cursor: grabbing; }
     .square-username { font-weight: bold; margin-bottom: 10px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); pointer-events: none; }
     .profile-image-container { width: 70px; height: 70px; background: #ffffff; border: 2px dashed #333333; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; overflow: hidden; margin-bottom: 12px; flex-shrink: 0; transition: border-color 0.2s; }
@@ -329,22 +321,32 @@ function loadMainPage(username) {
     }
   });
 
-  // DRAGGING SYSTEM
+  // DRAGGING SYSTEM (Desktop + Mobile)
   let isDragging = false;
   let startX, startY;
 
-  square.addEventListener('mousedown', (e) => {
+  function getClientCoords(e) {
+    if (e.touches && e.touches.length > 0) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function startDrag(e) {
     if (e.target.closest('.profile-bio') || e.target.closest('.profile-image-container')) return;
     isDragging = true;
-    startX = e.clientX - square.offsetLeft;
-    startY = e.clientY - square.offsetTop;
-    e.preventDefault();
-  });
+    const coords = getClientCoords(e);
+    startX = coords.x - square.offsetLeft;
+    startY = coords.y - square.offsetTop;
+  }
 
-  document.addEventListener('mousemove', (e) => {
+  function moveDrag(e) {
     if (!isDragging) return;
-    let newX = Math.max(0, Math.min(e.clientX - startX, bigBox.clientWidth - square.clientWidth));
-    let newY = Math.max(0, Math.min(e.clientY - startY, bigBox.clientHeight - square.clientHeight));
+    if (e.type === 'touchmove') e.preventDefault();
+
+    const coords = getClientCoords(e);
+    let newX = Math.max(0, Math.min(coords.x - startX, bigBox.clientWidth - square.clientWidth));
+    let newY = Math.max(0, Math.min(coords.y - startY, bigBox.clientHeight - square.clientHeight));
 
     square.style.left = `${newX}px`;
     square.style.top = `${newY}px`;
@@ -352,14 +354,22 @@ function loadMainPage(username) {
     if (currentRoomCode) {
       db.ref(`rooms/${currentRoomCode}/members/${username}`).update({ posX: newX, posY: newY });
     }
-  });
+  }
 
-  document.addEventListener('mouseup', () => {
+  function stopDrag() {
     if (isDragging) {
       isDragging = false;
       saveProfileState();
     }
-  });
+  }
+
+  square.addEventListener('mousedown', startDrag);
+  document.addEventListener('mousemove', moveDrag);
+  document.addEventListener('mouseup', stopDrag);
+
+  square.addEventListener('touchstart', startDrag, { passive: false });
+  document.addEventListener('touchmove', moveDrag, { passive: false });
+  document.addEventListener('touchend', stopDrag);
 
   bioElement.addEventListener('input', () => saveProfileState());
   logoutBtn.addEventListener('click', () => {
@@ -367,12 +377,10 @@ function loadMainPage(username) {
     location.reload();
   });
 
-  // --- 4. MULTIPLAYER REAL-TIME CARDS RENDER ---
   function renderRoomMembers(membersData) {
     const container = document.getElementById('big-box');
     if (!container) return;
 
-    // Remove cards of users who left
     document.querySelectorAll('.remote-player-square').forEach(el => {
       const userKey = el.getAttribute('data-user');
       if (!membersData || !membersData[userKey]) {
@@ -380,9 +388,8 @@ function loadMainPage(username) {
       }
     });
 
-    // Render/Update all other joined users
     Object.keys(membersData || {}).forEach((userKey) => {
-      if (userKey === username) return; // Don't render local player card again
+      if (userKey === username) return;
 
       const profile = membersData[userKey] || {};
       let guestSquare = document.querySelector(`.remote-player-square[data-user="${userKey}"]`);
@@ -425,7 +432,6 @@ function loadMainPage(username) {
     userRef.set(myProfile);
     userRef.onDisconnect().remove();
 
-    // Listen to live updates from Firebase
     db.ref(`rooms/${code}/members`).on('value', (snapshot) => {
       renderRoomMembers(snapshot.val() || {});
     });
