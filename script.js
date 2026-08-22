@@ -422,3 +422,63 @@ function loadMainPage(username) {
     location.reload();
   });
 }
+
+// --- ROOM CREATION & JOINING FEATURE ---
+document.addEventListener('DOMContentLoaded', () => {
+  // Inject Room Buttons into Header
+  const observer = new MutationObserver(() => {
+    const header = document.querySelector('.external-header');
+    if (header && !document.getElementById('room-controls-wrapper')) {
+      const roomContainer = document.createElement('div');
+      roomContainer.id = 'room-controls-wrapper';
+      roomContainer.style.cssText = 'display: flex; gap: 8px; margin-right: auto;';
+
+      const createBtn = document.createElement('button');
+      createBtn.id = 'create-room-btn';
+      createBtn.className = 'btn-room';
+      createBtn.innerText = 'Create Room ➕';
+      createBtn.style.cssText = 'padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;';
+
+      const joinBtn = document.createElement('button');
+      joinBtn.id = 'join-room-btn';
+      joinBtn.className = 'btn-room';
+      joinBtn.innerText = 'Join Room 🔑';
+      joinBtn.style.cssText = 'padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;';
+
+      roomContainer.appendChild(createBtn);
+      roomContainer.appendChild(joinBtn);
+      header.prepend(roomContainer);
+
+      // 6-Character Code Generator
+      function generateRoomCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+      }
+
+      // Create Room Event
+      createBtn.addEventListener('click', () => {
+        const roomCode = generateRoomCode();
+        alert(`🎉 Room Created!\n\nYour 6-Character Room Code: ${roomCode}\n\nShare this code with others to join.`);
+      });
+
+      // Join Room Event
+      joinBtn.addEventListener('click', () => {
+        const userCode = prompt("Enter the 6-character room code to join:");
+        if (userCode) {
+          const cleanCode = userCode.trim().toUpperCase();
+          if (cleanCode.length === 6) {
+            alert(`🚀 Joining Room: ${cleanCode}...`);
+          } else {
+            alert("⚠️ Invalid code! Room codes must be exactly 6 letters/numbers.");
+          }
+        }
+      });
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+});
