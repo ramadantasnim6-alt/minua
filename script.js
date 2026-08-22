@@ -16,6 +16,7 @@ var auth = firebase.auth();
 var db = firebase.database();
 
 var currentRoomCode = null;
+var roomListenerRef = null;
 
 var savedUser = null;
 try {
@@ -141,11 +142,17 @@ function loadMainPage(username) {
 
   body.innerHTML = `
     <div class="external-header">
-      <div id="room-controls-wrapper" style="display: flex; gap: 8px; margin-right: auto;">
+      <div id="room-controls-wrapper" style="display: flex; gap: 8px;">
         <button id="create-room-btn" class="btn-room" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Create Room ➕</button>
         <button id="join-room-btn" class="btn-room" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Join Room 🔑</button>
       </div>
-      <span class="user-display">Logged in as: <b>${username}</b></span>
+
+      <div id="room-status-badge" class="hidden" style="display: flex; align-items: center; gap: 10px; background: #f3f4f6; padding: 4px 12px; border-radius: 20px; border: 1px solid #d1d5db; font-size: 0.85rem;">
+        <span style="color: #374151;">Room: <b id="current-room-display" style="color: #4f46e5;">NONE</b></span>
+        <button id="leave-room-btn" style="padding: 3px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.75rem;">Leave Room 🚪</button>
+      </div>
+
+      <span class="user-display" style="margin-left: auto;">Logged in as: <b>${username}</b></span>
       <button id="customize-btn" class="btn-customize">Customize 🎨</button>
       
       <div class="settings-wrapper">
@@ -255,6 +262,10 @@ function loadMainPage(username) {
 
   const settingsBtn = document.getElementById('settings-btn');
   const settingsDropdown = document.getElementById('settings-dropdown');
+
+  const roomStatusBadge = document.getElementById('room-status-badge');
+  const currentRoomDisplay = document.getElementById('current-room-display');
+  const leaveRoomBtn = document.getElementById('leave-room-btn');
 
   settingsBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -418,6 +429,8 @@ function loadMainPage(username) {
   }
 
   function joinRoomSession(code) {
+    if (currentRoomCode) leaveRoomSession();
+
     currentRoomCode = code;
     const imgEl = uploadTrigger.querySelector('img');
     const myProfile = {
@@ -428,14 +441,42 @@ function loadMainPage(username) {
       image: imgEl ? imgEl.src : ''
     };
 
+    // Update Header Status & URL
+    currentRoomDisplay.innerText = code;
+    roomStatusBadge.classList.remove('hidden');
+    window.location.hash = code;
+
     const userRef = db.ref(`rooms/${code}/members/${username}`);
     userRef.set(myProfile);
     userRef.onDisconnect().remove();
 
-    db.ref(`rooms/${code}/members`).on('value', (snapshot) => {
+    roomListenerRef = db.ref(`rooms/${code}/members`);
+    roomListenerRef.on('value', (snapshot) => {
       renderRoomMembers(snapshot.val() || {});
     });
   }
+
+  function leaveRoomSession() {
+    if (!currentRoomCode) return;
+
+    db.ref(`rooms/${currentRoomCode}/members/${username}`).remove();
+    if (roomListenerRef) roomListenerRef.off();
+
+    currentRoomCode = null;
+    roomStatusBadge.classList.add('hidden');
+    currentRoomDisplay.innerText = "NONE";
+    
+    // Clear URL Hash back to main page
+    history.pushState("", document.title, window.location.pathname + window.location.search);
+
+    // Remove all remote player cards
+    document.querySelectorAll('.remote-player-square').forEach(el => el.remove());
+  }
+
+  leaveRoomBtn.addEventListener('click', () => {
+    leaveRoomSession();
+    alert("🚪 You left the room.");
+  });
 
   function generateCode() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -444,7 +485,7 @@ function loadMainPage(username) {
   document.getElementById('create-room-btn').addEventListener('click', () => {
     const code = generateCode();
     joinRoomSession(code);
-    alert(`🎉 Room Created!\n\nRoom Code: ${code}\n\nShare this code with up to 3 friends!`);
+    alert(`🎉 Room Created!\n\nRoom Code: ${code}\n\nShare your link with up to 3 friends!`);
   });
 
   document.getElementById('join-room-btn').addEventListener('click', () => {
@@ -466,4 +507,14 @@ function loadMainPage(username) {
       }
     });
   });
+
+  // AUTO-JOIN via URL Link hash (e.g. site.com/#T6YU89)
+  const initialHash = window.location.hash.replace('#', '').trim().toUpperCase();
+  if (initialHash && initialHash.length === 6) {
+    db.ref(`rooms/${initialHash}`).get().then((snapshot) => {
+      if (snapshot.exists()) {
+        joinRoomSession(initialHash);
+      }
+    });
+  }
 }
