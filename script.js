@@ -2,6 +2,7 @@
 var firebaseConfig = {
   apiKey: "AIzaSyBC8ukohMx1yqiKWMPRmBHmUt_aYnyy2bM",
   authDomain: "minua-95068.firebaseapp.com",
+  databaseURL: "https://minua-95068-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "minua-95068",
   storageBucket: "minua-95068.firebasestorage.app",
   messagingSenderId: "451698384504",
@@ -529,4 +530,5 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
+});
 });
