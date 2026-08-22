@@ -482,3 +482,93 @@ document.addEventListener('DOMContentLoaded', () => {
 
   observer.observe(document.body, { childList: true, subtree: true });
 });
+
+// --- 4-PLAYER REALTIME ROOM FEATURE ---
+document.addEventListener('DOMContentLoaded', () => {
+  const db = firebase.database();
+
+  const observer = new MutationObserver(() => {
+    const header = document.querySelector('.external-header');
+    if (header && !document.getElementById('room-controls-wrapper')) {
+      const roomContainer = document.createElement('div');
+      roomContainer.id = 'room-controls-wrapper';
+      roomContainer.style.cssText = 'display: flex; gap: 8px; margin-right: auto;';
+
+      const createBtn = document.createElement('button');
+      createBtn.className = 'btn-room';
+      createBtn.innerText = 'Create Room ➕';
+      createBtn.style.cssText = 'padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;';
+
+      const joinBtn = document.createElement('button');
+      joinBtn.className = 'btn-room';
+      joinBtn.innerText = 'Join Room 🔑';
+      joinBtn.style.cssText = 'padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;';
+
+      roomContainer.appendChild(createBtn);
+      roomContainer.appendChild(joinBtn);
+      header.prepend(roomContainer);
+
+      function generateRoomCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+      }
+
+      // Create Room & Sync to Database (Max 4 Members)
+      createBtn.addEventListener('click', () => {
+        const roomCode = generateRoomCode();
+        const currentUser = localStorage.getItem('nexus_user') || 'Host';
+
+        db.ref('rooms/' + roomCode).set({
+          host: currentUser,
+          members: [currentUser]
+        }).then(() => {
+          alert(`🎉 Room Created!\n\nRoom Code: ${roomCode}\n\nShare this code with up to 3 friends (Max 4 Players).`);
+          
+          // Listen for new members joining live
+          db.ref('rooms/' + roomCode + '/members').on('value', (snapshot) => {
+            const members = snapshot.val() || [];
+            if (members.length > 1) {
+              const lastMember = members[members.length - 1];
+              alert(`🤝 ${lastMember} joined the room! (${members.length}/4 Players)`);
+            }
+          });
+        });
+      });
+
+      // Join Existing Room
+      joinBtn.addEventListener('click', () => {
+        const userCode = prompt("Enter the 6-character room code to join:");
+        if (!userCode) return;
+        
+        const cleanCode = userCode.trim().toUpperCase();
+        const currentUser = localStorage.getItem('nexus_user') || 'Guest';
+
+        db.ref('rooms/' + cleanCode).get().then((snapshot) => {
+          if (snapshot.exists()) {
+            const roomData = snapshot.val();
+            let members = roomData.members || [];
+
+            if (members.length >= 4) {
+              alert("⚠️ This room is full! (4/4 players max)");
+            } else if (members.includes(currentUser)) {
+              alert("ℹ️ You are already in this room!");
+            } else {
+              members.push(currentUser);
+              db.ref('rooms/' + cleanCode + '/members').set(members).then(() => {
+                alert(`🚀 Joined room ${cleanCode}! (${members.length}/4 Players)`);
+              });
+            }
+          } else {
+            alert("⚠️ Room code not found! Check the code and try again.");
+          }
+        });
+      });
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+});
