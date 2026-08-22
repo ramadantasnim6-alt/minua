@@ -14,7 +14,21 @@ firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 
 // --- 1. CHECK PERSISTENT LOGIN ON PAGE LOAD ---
+// Replace lines 17-20 at the top of script.js with this:
 var savedUser = null;
+try {
+  savedUser = localStorage.getItem('nexus_user');
+} catch (e) {
+  console.warn('Storage access blocked:', e);
+}
+
+// Check Firebase Auth state on page load
+auth.onAuthStateChanged((user) => {
+  if (user || (savedUser && savedUser !== "null")) {
+    const username = user ? (user.displayName || user.email.split('@')[0]) : savedUser;
+    loadMainPage(username);
+  }
+});
 
 // --- 2. HOME PAGE VIEW SWITCHING & AUTHENTICATION ---
 function isValidEmail(email) {
