@@ -10,11 +10,16 @@ var firebaseConfig = {
   measurementId: "G-6MWLFWK5T4"
 };
 
-// Initialize Firebase Auth
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 var auth = firebase.auth();
+var db = firebase.database();
 
-// --- 1. CHECK PERSISTENT LOGIN ON PAGE LOAD ---
+let currentRoomCode = null;
+
+// --- 1. AUTH STATE & AUTO-LOGIN ---
 var savedUser = null;
 try {
   savedUser = localStorage.getItem('nexus_user');
@@ -22,7 +27,6 @@ try {
   console.warn('Storage access blocked:', e);
 }
 
-// Check Firebase Auth state on page load
 auth.onAuthStateChanged((user) => {
   if (user || (savedUser && savedUser !== "null")) {
     const username = user ? (user.displayName || user.email.split('@')[0]) : savedUser;
@@ -30,12 +34,12 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-// --- 2. HOME PAGE VIEW SWITCHING & AUTHENTICATION ---
+// Helper validation
 function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// --- 2. LOGIN / SIGNUP EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
   const welcomeView = document.getElementById('welcome-view');
   const signupView = document.getElementById('signup-view');
@@ -49,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('login-form');
   const signupForm = document.getElementById('signup-form');
 
-  // Navigation Event Listeners
   if (goToSignupBtn) {
     goToSignupBtn.addEventListener('click', () => {
       welcomeView.classList.add('hidden');
@@ -78,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Log In Form Submission
+  // Handle Login
   if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -86,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const passInput = document.getElementById('li-pass').value;
 
       auth.signInWithEmailAndPassword(emailInput, passInput)
-        .then((userCredential) => {
+        .then(() => {
           const username = emailInput.split('@')[0];
           localStorage.setItem('nexus_user', username);
           alert("✅ Welcome back!");
@@ -98,11 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Sign Up Form Submission
+  // Handle Sign Up
   if (signupForm) {
     signupForm.addEventListener('submit', (e) => {
       e.preventDefault();
-
       const emailInput = document.getElementById('su-email').value.trim();
       const userInput = document.getElementById('su-user').value.trim();
       const passInput = document.getElementById('su-pass').value;
@@ -118,9 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       auth.createUserWithEmailAndPassword(emailInput, passInput)
-        .then((userCredential) => {
+        .then(() => {
           localStorage.setItem('nexus_user', userInput);
-          alert("✅ Account created successfully! You can now log in from any browser.");
+          alert("✅ Account created successfully!");
           loadMainPage(userInput);
         })
         .catch((error) => {
@@ -130,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// --- 3. MAIN PAGE BUILDER (BOX, SQUARE, CUSTOMIZATION, DRAGGING) ---
+// --- 3. MAIN PAGE BUILDER ---
 function loadMainPage(username) {
   const body = document.querySelector('body');
   
@@ -147,6 +149,10 @@ function loadMainPage(username) {
 
   body.innerHTML = `
     <div class="external-header">
+      <div id="room-controls-wrapper" style="display: flex; gap: 8px; margin-right: auto;">
+        <button id="create-room-btn" class="btn-room" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Create Room ➕</button>
+        <button id="join-room-btn" class="btn-room" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Join Room 🔑</button>
+      </div>
       <span class="user-display">Logged in as: <b>${username}</b></span>
       <button id="customize-btn" class="btn-customize">Customize 🎨</button>
       
@@ -165,28 +171,23 @@ function loadMainPage(username) {
     <div id="custom-modal" class="custom-modal hidden">
       <div class="modal-content">
         <h3>Customize Your Space</h3>
-        
         <div class="custom-section">
           <label>Outside Box Background Color</label>
           <input type="color" id="picker-page-bg" value="${savedProfile.pageBg}">
         </div>
-
         <div class="custom-section">
           <label>Big Box Background Color</label>
           <input type="color" id="picker-box-bg" value="${savedProfile.boxBg}">
         </div>
-
         <div class="custom-section">
           <label>Square Background Color</label>
           <input type="color" id="picker-square-bg" value="${savedProfile.squareBg}">
         </div>
-
         <div class="custom-section">
           <label>Square Profile Picture</label>
           <button id="modal-upload-btn" class="btn-secondary-custom">Upload Photo</button>
           <input type="file" id="modal-image-upload" accept="image/*" style="display: none;">
         </div>
-
         <button id="close-modal-btn" class="btn-primary-custom">Done</button>
       </div>
     </div>
@@ -194,15 +195,11 @@ function loadMainPage(username) {
     <div class="blank-main-page" id="page-wrapper" style="background: ${savedProfile.pageBg};">
       <div class="big-box" id="big-box" style="background: ${savedProfile.boxBg};">
         <div class="draggable-square" id="draggable-square" style="background: ${savedProfile.squareBg}; left: ${savedProfile.posX || 50}px; top: ${savedProfile.posY || 50}px;">
-          
           <div class="square-username">${username}</div>
-
           <input type="file" id="image-upload" accept="image/*" style="display: none;">
-          
           <div class="profile-image-container" id="upload-trigger" title="Click to upload image">
             ${savedProfile.image ? `<img src="${savedProfile.image}" alt="Profile Image">` : `<span class="upload-placeholder">📷</span>`}
           </div>
-
           <div class="profile-bio" id="profile-bio" contenteditable="true" placeholder="Add your bio...">${savedProfile.bio || ''}</div>
         </div>
       </div>
@@ -212,7 +209,7 @@ function loadMainPage(username) {
   const mainStyle = document.createElement('style');
   mainStyle.innerHTML = `
     .blank-main-page { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; transition: background 0.2s; }
-    .external-header { position: absolute; top: 15px; right: 20px; display: flex; align-items: center; gap: 12px; z-index: 100; font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #333333; }
+    .external-header { position: absolute; top: 15px; right: 20px; left: 20px; display: flex; align-items: center; gap: 12px; z-index: 100; font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #333333; }
     .settings-wrapper { position: relative; display: inline-block; }
     .settings-dropdown { position: absolute; top: 110%; right: 0; width: 180px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); padding: 6px; z-index: 200; display: flex; flex-direction: column; gap: 2px; }
     .menu-item { background: transparent; border: none; color: #374151; padding: 8px 10px; text-align: left; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.2s; }
@@ -235,6 +232,7 @@ function loadMainPage(username) {
     .big-box { width: 97vw; height: 90vh; border: 2px solid #000000; border-radius: 1px; position: relative; overflow: hidden; transition: background 0.2s; }
     .draggable-square { width: 200px; height: 240px; border: 2px solid #000000; border-radius: 1px; position: absolute; cursor: grab; display: flex; flex-direction: column; align-items: center; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); transition: background 0.2s; }
     .draggable-square:active { cursor: grabbing; }
+    .square-username { font-weight: bold; margin-bottom: 10px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); pointer-events: none; }
     .profile-image-container { width: 70px; height: 70px; background: #ffffff; border: 2px dashed #333333; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; overflow: hidden; margin-bottom: 12px; flex-shrink: 0; transition: border-color 0.2s; }
     .profile-image-container:hover { border-color: #ffffff; }
     .upload-placeholder { font-size: 1.2rem; }
@@ -278,81 +276,65 @@ function loadMainPage(username) {
   });
 
   function saveProfileState() {
+    const imgEl = uploadTrigger.querySelector('img');
     const currentProfile = {
-      image: uploadTrigger.querySelector('img') ? uploadTrigger.querySelector('img').src : '',
+      image: imgEl ? imgEl.src : '',
       bio: bioElement.innerText,
-      squareBg: square.style.background,
+      squareBg: square.style.background || '#6366f1',
       boxBg: bigBox.style.background,
       pageBg: pageWrapper.style.background,
       posX: square.offsetLeft,
       posY: square.offsetTop
     };
     localStorage.setItem(savedDataKey, JSON.stringify(currentProfile));
+
+    if (currentRoomCode) {
+      db.ref(`rooms/${currentRoomCode}/members/${username}`).update(currentProfile);
+    }
   }
 
-  customizeBtn.addEventListener('click', () => {
-    customModal.classList.remove('hidden');
-  });
-
+  customizeBtn.addEventListener('click', () => customModal.classList.remove('hidden'));
   closeModalBtn.addEventListener('click', () => {
     customModal.classList.add('hidden');
     saveProfileState();
   });
 
-  pickerPageBg.addEventListener('input', (e) => {
-    pageWrapper.style.background = e.target.value;
-    saveProfileState();
-  });
+  pickerPageBg.addEventListener('input', (e) => { pageWrapper.style.background = e.target.value; saveProfileState(); });
+  pickerBoxBg.addEventListener('input', (e) => { bigBox.style.background = e.target.value; saveProfileState(); });
+  pickerSquareBg.addEventListener('input', (e) => { square.style.background = e.target.value; saveProfileState(); });
 
-  pickerBoxBg.addEventListener('input', (e) => {
-    bigBox.style.background = e.target.value;
-    saveProfileState();
-  });
-
-  pickerSquareBg.addEventListener('input', (e) => {
-    square.style.background = e.target.value;
-    saveProfileState();
-  });
-
-  modalUploadBtn.addEventListener('click', () => {
-    modalImageUpload.click();
-  });
-
+  modalUploadBtn.addEventListener('click', () => modalImageUpload.click());
   modalImageUpload.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = function(event) {
-        uploadTrigger.innerHTML = `<img src="${event.target.result}" alt="Profile Image">`;
+      reader.onload = (evt) => {
+        uploadTrigger.innerHTML = `<img src="${evt.target.result}" alt="Profile Image">`;
         saveProfileState();
       };
       reader.readAsDataURL(file);
     }
   });
 
-  uploadTrigger.addEventListener('click', () => {
-    imageUpload.click();
-  });
-
+  uploadTrigger.addEventListener('click', () => imageUpload.click());
   imageUpload.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = function(event) {
-        uploadTrigger.innerHTML = `<img src="${event.target.result}" alt="Profile Image">`;
+      reader.onload = (evt) => {
+        uploadTrigger.innerHTML = `<img src="${evt.target.result}" alt="Profile Image">`;
         saveProfileState();
       };
       reader.readAsDataURL(file);
     }
   });
 
+  // DRAGGING SYSTEM
   let isDragging = false;
   let startX, startY;
 
   square.addEventListener('mousedown', (e) => {
-    if (e.target.closest('.profile-bio') || e.target.closest('.profile-image-container')) {
-      return;
-    }
+    if (e.target.closest('.profile-bio') || e.target.closest('.profile-image-container')) return;
     isDragging = true;
     startX = e.clientX - square.offsetLeft;
     startY = e.clientY - square.offsetTop;
@@ -361,18 +343,15 @@ function loadMainPage(username) {
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-
-    let newX = e.clientX - startX;
-    let newY = e.clientY - startY;
-
-    const maxX = bigBox.clientWidth - square.clientWidth;
-    const maxY = bigBox.clientHeight - square.clientHeight;
-
-    newX = Math.max(0, Math.min(newX, maxX));
-    newY = Math.max(0, Math.min(newY, maxY));
+    let newX = Math.max(0, Math.min(e.clientX - startX, bigBox.clientWidth - square.clientWidth));
+    let newY = Math.max(0, Math.min(e.clientY - startY, bigBox.clientHeight - square.clientHeight));
 
     square.style.left = `${newX}px`;
     square.style.top = `${newY}px`;
+
+    if (currentRoomCode) {
+      db.ref(`rooms/${currentRoomCode}/members/${username}`).update({ posX: newX, posY: newY });
+    }
   });
 
   document.addEventListener('mouseup', () => {
@@ -382,153 +361,103 @@ function loadMainPage(username) {
     }
   });
 
-  square.addEventListener('touchstart', (e) => {
-    if (e.target.closest('.profile-bio') || e.target.closest('.profile-image-container')) return;
-    isDragging = true;
-    const touch = e.touches[0];
-    startX = touch.clientX - square.offsetLeft;
-    startY = touch.clientY - square.offsetTop;
-  }, { passive: false });
-
-  document.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    let newX = touch.clientX - startX;
-    let newY = touch.clientY - startY;
-
-    const maxX = bigBox.clientWidth - square.clientWidth;
-    const maxY = bigBox.clientHeight - square.clientHeight;
-
-    square.style.left = `${Math.max(0, Math.min(newX, maxX))}px`;
-    square.style.top = `${Math.max(0, Math.min(newY, maxY))}px`;
-  }, { passive: false });
-
-  document.addEventListener('touchend', () => {
-    if (isDragging) {
-      isDragging = false;
-      saveProfileState();
-    }
-  });
-
-  bioElement.addEventListener('input', () => {
-    saveProfileState();
-  });
-
+  bioElement.addEventListener('input', () => saveProfileState());
   logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('nexus_user');
     location.reload();
   });
-}
 
-// --- 4. REAL-TIME MULTIPLAYER ROOM CARDS (MAX 4 PLAYERS) ---
-document.addEventListener('DOMContentLoaded', () => {
-  const db = firebase.database();
-  let currentRoomCode = null;
-
+  // --- 4. MULTIPLAYER REAL-TIME CARDS RENDER ---
   function renderRoomMembers(membersData) {
-    const bigBox = document.getElementById('big-box');
-    if (!bigBox) return;
+    const container = document.getElementById('big-box');
+    if (!container) return;
 
-    document.querySelectorAll('.remote-player-square').forEach(el => el.remove());
+    // Remove cards of users who left
+    document.querySelectorAll('.remote-player-square').forEach(el => {
+      const userKey = el.getAttribute('data-user');
+      if (!membersData || !membersData[userKey]) {
+        el.remove();
+      }
+    });
 
-    const myUser = localStorage.getItem('nexus_user') || '';
-    let offsetIndex = 1;
+    // Render/Update all other joined users
+    Object.keys(membersData || {}).forEach((userKey) => {
+      if (userKey === username) return; // Don't render local player card again
 
-    Object.keys(membersData || {}).forEach((username) => {
-      if (username === myUser) return;
+      const profile = membersData[userKey] || {};
+      let guestSquare = document.querySelector(`.remote-player-square[data-user="${userKey}"]`);
 
-      const profile = membersData[username] || {};
-      const guestSquare = document.createElement('div');
-      guestSquare.className = 'draggable-square remote-player-square';
-      guestSquare.style.cssText = `
-        background: ${profile.squareBg || '#6366f1'};
-        left: ${profile.posX || (50 + offsetIndex * 220)}px;
-        top: ${profile.posY || 50}px;
-        position: absolute;
-        pointer-events: none;
-      `;
+      if (!guestSquare) {
+        guestSquare = document.createElement('div');
+        guestSquare.className = 'draggable-square remote-player-square';
+        guestSquare.setAttribute('data-user', userKey);
+        guestSquare.style.position = 'absolute';
+        guestSquare.style.pointerEvents = 'none';
+        container.appendChild(guestSquare);
+      }
+
+      guestSquare.style.background = profile.squareBg || '#6366f1';
+      guestSquare.style.left = `${profile.posX ?? 250}px`;
+      guestSquare.style.top = `${profile.posY ?? 50}px`;
 
       guestSquare.innerHTML = `
-        <div class="square-username">${username}</div>
-        <div class="profile-image-container">
+        <div class="square-username">${userKey}</div>
+        <div class="profile-image-container" style="cursor:default;">
           ${profile.image ? `<img src="${profile.image}" alt="Profile">` : `<span class="upload-placeholder">📷</span>`}
         </div>
-        <div class="profile-bio" style="border:none;">${profile.bio || 'In room'}</div>
+        <div class="profile-bio" style="border:none;">${profile.bio || ''}</div>
       `;
-
-      bigBox.appendChild(guestSquare);
-      offsetIndex++;
     });
   }
 
-  const observer = new MutationObserver(() => {
-    const header = document.querySelector('.external-header');
-    if (header && !document.getElementById('room-controls-wrapper')) {
-      const roomContainer = document.createElement('div');
-      roomContainer.id = 'room-controls-wrapper';
-      roomContainer.style.cssText = 'display: flex; gap: 8px; margin-right: auto;';
+  function joinRoomSession(code) {
+    currentRoomCode = code;
+    const imgEl = uploadTrigger.querySelector('img');
+    const myProfile = {
+      squareBg: square.style.background || '#6366f1',
+      posX: square.offsetLeft || 50,
+      posY: square.offsetTop || 50,
+      bio: bioElement.innerText || '',
+      image: imgEl ? imgEl.src : ''
+    };
 
-      const createBtn = document.createElement('button');
-      createBtn.className = 'btn-room';
-      createBtn.innerText = 'Create Room ➕';
-      createBtn.style.cssText = 'padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;';
+    const userRef = db.ref(`rooms/${code}/members/${username}`);
+    userRef.set(myProfile);
+    userRef.onDisconnect().remove();
 
-      const joinBtn = document.createElement('button');
-      joinBtn.className = 'btn-room';
-      joinBtn.innerText = 'Join Room 🔑';
-      joinBtn.style.cssText = 'padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;';
+    // Listen to live updates from Firebase
+    db.ref(`rooms/${code}/members`).on('value', (snapshot) => {
+      renderRoomMembers(snapshot.val() || {});
+    });
+  }
 
-      roomContainer.appendChild(createBtn);
-      roomContainer.appendChild(joinBtn);
-      header.prepend(roomContainer);
+  function generateCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
 
-      function generateCode() {
-        return Math.random().toString(36).substring(2, 8).toUpperCase();
-      }
-
-      function joinRoomSession(code) {
-        currentRoomCode = code;
-        const myUser = localStorage.getItem('nexus_user') || 'Player';
-        const myProfileKey = `nexus_profile_${myUser}`;
-        const myProfile = JSON.parse(localStorage.getItem(myProfileKey)) || {};
-
-        db.ref(`rooms/${code}/members/${myUser}`).set(myProfile);
-
-        db.ref(`rooms/${code}/members`).on('value', (snapshot) => {
-          const members = snapshot.val() || {};
-          renderRoomMembers(members);
-        });
-      }
-
-      createBtn.addEventListener('click', () => {
-        const code = generateCode();
-        joinRoomSession(code);
-        alert(`🎉 Room Created!\n\nRoom Code: ${code}\n\nShare this code with up to 3 friends.`);
-      });
-
-      joinBtn.addEventListener('click', () => {
-        const userCode = prompt("Enter 6-character room code:");
-        if (!userCode) return;
-        const code = userCode.trim().toUpperCase();
-
-        db.ref(`rooms/${code}`).get().then((snapshot) => {
-          if (snapshot.exists()) {
-            const members = snapshot.val().members || {};
-            if (Object.keys(members).length >= 4) {
-              alert("⚠️ Room is full (4/4 players max)!");
-            } else {
-              joinRoomSession(code);
-              alert(`🚀 Joined room ${code}!`);
-            }
-          } else {
-            alert("⚠️ Room code not found!");
-          }
-        });
-      });
-    }
+  document.getElementById('create-room-btn').addEventListener('click', () => {
+    const code = generateCode();
+    joinRoomSession(code);
+    alert(`🎉 Room Created!\n\nRoom Code: ${code}\n\nShare this code with up to 3 friends!`);
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
-});
-});
+  document.getElementById('join-room-btn').addEventListener('click', () => {
+    const userCode = prompt("Enter 6-character room code:");
+    if (!userCode) return;
+    const code = userCode.trim().toUpperCase();
+
+    db.ref(`rooms/${code}`).get().then((snapshot) => {
+      if (snapshot.exists()) {
+        const members = snapshot.val().members || {};
+        if (Object.keys(members).length >= 4) {
+          alert("⚠️ Room is full (4/4 players max)!");
+        } else {
+          joinRoomSession(code);
+          alert(`🚀 Joined room ${code}!`);
+        }
+      } else {
+        alert("⚠️ Room code not found!");
+      }
+    });
+  });
+}
