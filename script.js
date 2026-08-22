@@ -15,20 +15,6 @@ var auth = firebase.auth();
 
 // --- 1. CHECK PERSISTENT LOGIN ON PAGE LOAD ---
 var savedUser = null;
-try {
-  savedUser = localStorage.getItem('nexus_user');
-} catch (e) {
-  console.warn('Storage access blocked:', e);
-}
-
-// Only auto-load main page if savedUser is actually a non-empty string
-if (savedUser && savedUser.trim() !== "" && savedUser !== "null") {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => loadMainPage(savedUser));
-  } else {
-    loadMainPage(savedUser);
-  }
-}
 
 // --- 2. HOME PAGE VIEW SWITCHING & AUTHENTICATION ---
 function isValidEmail(email) {
