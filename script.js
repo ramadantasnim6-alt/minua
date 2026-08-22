@@ -14,7 +14,6 @@ firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 
 // --- 1. CHECK PERSISTENT LOGIN ON PAGE LOAD ---
-// Replace lines 17-20 at the top of script.js with this:
 var savedUser = null;
 try {
   savedUser = localStorage.getItem('nexus_user');
@@ -79,57 +78,55 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Log In Form Submission
- // Log In Form Submission
-if (loginForm) {
-  loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const emailInput = document.getElementById('li-email').value.trim();
-    const passInput = document.getElementById('li-pass').value;
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const emailInput = document.getElementById('li-email').value.trim();
+      const passInput = document.getElementById('li-pass').value;
 
-    auth.signInWithEmailAndPassword(emailInput, passInput)
-      .then((userCredential) => {
-        const username = emailInput.split('@')[0];
-        localStorage.setItem('nexus_user', username);
-        alert("✅ Welcome back!");
-        loadMainPage(username);
-      })
-      .catch((error) => {
-        alert(`⚠️ Login Failed: ${error.message}`);
-      });
-  });
-}
+      auth.signInWithEmailAndPassword(emailInput, passInput)
+        .then((userCredential) => {
+          const username = emailInput.split('@')[0];
+          localStorage.setItem('nexus_user', username);
+          alert("✅ Welcome back!");
+          loadMainPage(username);
+        })
+        .catch((error) => {
+          alert(`⚠️ Login Failed: ${error.message}`);
+        });
+    });
+  }
 
   // Sign Up Form Submission
- // Sign Up Form Submission
-if (signupForm) {
-  signupForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+  if (signupForm) {
+    signupForm.addEventListener('submit', (e) => {
+      e.preventDefault();
 
-    const emailInput = document.getElementById('su-email').value.trim();
-    const userInput = document.getElementById('su-user').value.trim();
-    const passInput = document.getElementById('su-pass').value;
+      const emailInput = document.getElementById('su-email').value.trim();
+      const userInput = document.getElementById('su-user').value.trim();
+      const passInput = document.getElementById('su-pass').value;
 
-    if (!isValidEmail(emailInput)) {
-      alert("⚠️ Error: Please enter a valid email address.");
-      return;
-    }
+      if (!isValidEmail(emailInput)) {
+        alert("⚠️ Error: Please enter a valid email address.");
+        return;
+      }
 
-    if (passInput.length < 6) {
-      alert("⚠️ Error: Password must be at least 6 characters long.");
-      return;
-    }
+      if (passInput.length < 6) {
+        alert("⚠️ Error: Password must be at least 6 characters long.");
+        return;
+      }
 
-    auth.createUserWithEmailAndPassword(emailInput, passInput)
-      .then((userCredential) => {
-        localStorage.setItem('nexus_user', userInput);
-        alert("✅ Account created successfully! You can now log in from any browser.");
-        loadMainPage(userInput);
-      })
-      .catch((error) => {
-        alert(`⚠️ Sign Up Failed: ${error.message}`);
-      });
-  });
-}
+      auth.createUserWithEmailAndPassword(emailInput, passInput)
+        .then((userCredential) => {
+          localStorage.setItem('nexus_user', userInput);
+          alert("✅ Account created successfully! You can now log in from any browser.");
+          loadMainPage(userInput);
+        })
+        .catch((error) => {
+          alert(`⚠️ Sign Up Failed: ${error.message}`);
+        });
+    });
+  }
 });
 
 // --- 3. MAIN PAGE BUILDER (BOX, SQUARE, CUSTOMIZATION, DRAGGING) ---
@@ -423,84 +420,21 @@ function loadMainPage(username) {
   });
 }
 
-// --- ROOM CREATION & JOINING FEATURE ---
-document.addEventListener('DOMContentLoaded', () => {
-  // Inject Room Buttons into Header
-  const observer = new MutationObserver(() => {
-    const header = document.querySelector('.external-header');
-    if (header && !document.getElementById('room-controls-wrapper')) {
-      const roomContainer = document.createElement('div');
-      roomContainer.id = 'room-controls-wrapper';
-      roomContainer.style.cssText = 'display: flex; gap: 8px; margin-right: auto;';
-
-      const createBtn = document.createElement('button');
-      createBtn.id = 'create-room-btn';
-      createBtn.className = 'btn-room';
-      createBtn.innerText = 'Create Room ➕';
-      createBtn.style.cssText = 'padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;';
-
-      const joinBtn = document.createElement('button');
-      joinBtn.id = 'join-room-btn';
-      joinBtn.className = 'btn-room';
-      joinBtn.innerText = 'Join Room 🔑';
-      joinBtn.style.cssText = 'padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;';
-
-      roomContainer.appendChild(createBtn);
-      roomContainer.appendChild(joinBtn);
-      header.prepend(roomContainer);
-
-      // 6-Character Code Generator
-      function generateRoomCode() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 6; i++) {
-          code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return code;
-      }
-
-      // Create Room Event
-      createBtn.addEventListener('click', () => {
-        const roomCode = generateRoomCode();
-        alert(`🎉 Room Created!\n\nYour 6-Character Room Code: ${roomCode}\n\nShare this code with others to join.`);
-      });
-
-      // Join Room Event
-      joinBtn.addEventListener('click', () => {
-        const userCode = prompt("Enter the 6-character room code to join:");
-        if (userCode) {
-          const cleanCode = userCode.trim().toUpperCase();
-          if (cleanCode.length === 6) {
-            alert(`🚀 Joining Room: ${cleanCode}...`);
-          } else {
-            alert("⚠️ Invalid code! Room codes must be exactly 6 letters/numbers.");
-          }
-        }
-      });
-    }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
-});
-
-// --- REAL-TIME MULTIPLAYER ROOM CARDS (MAX 4 PLAYERS) ---
+// --- 4. REAL-TIME MULTIPLAYER ROOM CARDS (MAX 4 PLAYERS) ---
 document.addEventListener('DOMContentLoaded', () => {
   const db = firebase.database();
   let currentRoomCode = null;
 
-  // Helper to render all joined user cards inside big-box
   function renderRoomMembers(membersData) {
     const bigBox = document.getElementById('big-box');
     if (!bigBox) return;
 
-    // Clear existing guest cards
     document.querySelectorAll('.remote-player-square').forEach(el => el.remove());
 
     const myUser = localStorage.getItem('nexus_user') || '';
     let offsetIndex = 1;
 
     Object.keys(membersData || {}).forEach((username) => {
-      // Don't duplicate your own local draggable square
       if (username === myUser) return;
 
       const profile = membersData[username] || {};
@@ -511,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         left: ${profile.posX || (50 + offsetIndex * 220)}px;
         top: ${profile.posY || 50}px;
         position: absolute;
-        pointer-events: none; /* Guest cards are view-only */
+        pointer-events: none;
       `;
 
       guestSquare.innerHTML = `
@@ -527,7 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Inject Header Buttons
   const observer = new MutationObserver(() => {
     const header = document.querySelector('.external-header');
     if (header && !document.getElementById('room-controls-wrapper')) {
@@ -559,24 +492,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const myProfileKey = `nexus_profile_${myUser}`;
         const myProfile = JSON.parse(localStorage.getItem(myProfileKey)) || {};
 
-        // Sync local user profile into the room
         db.ref(`rooms/${code}/members/${myUser}`).set(myProfile);
 
-        // Listen for other players joining/moving in the room
         db.ref(`rooms/${code}/members`).on('value', (snapshot) => {
           const members = snapshot.val() || {};
           renderRoomMembers(members);
         });
       }
 
-      // Create Room Event
       createBtn.addEventListener('click', () => {
         const code = generateCode();
         joinRoomSession(code);
         alert(`🎉 Room Created!\n\nRoom Code: ${code}\n\nShare this code with up to 3 friends.`);
       });
 
-      // Join Room Event
       joinBtn.addEventListener('click', () => {
         const userCode = prompt("Enter 6-character room code:");
         if (!userCode) return;
