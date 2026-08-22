@@ -1,3 +1,18 @@
+// Paste this at the VERY TOP of script.js
+var firebaseConfig = {
+  apiKey: "AIzaSyBC8ukohMx1yqiKWMPRmBHmUt_aYnyy2bM",
+  authDomain: "minua-95068.firebaseapp.com",
+  projectId: "minua-95068",
+  storageBucket: "minua-95068.firebasestorage.app",
+  messagingSenderId: "451698384504",
+  appId: "1:451698384504:web:31f8acf1d577e67a13978d",
+  measurementId: "G-6MWLFWK5T4"
+};
+
+// Initialize Firebase Auth
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+
 // --- 1. CHECK PERSISTENT LOGIN ON PAGE LOAD ---
 var savedUser = null;
 try {
@@ -64,77 +79,57 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Log In Form Submission
-  if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const emailInput = document.getElementById('li-email').value.trim();
-      
-      const existingUsers = JSON.parse(localStorage.getItem('nexus_registered_users')) || [];
-      const matchedUser = existingUsers.find(u => u.email.toLowerCase() === emailInput.toLowerCase());
+ // Log In Form Submission
+if (loginForm) {
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const emailInput = document.getElementById('li-email').value.trim();
+    const passInput = document.getElementById('li-pass').value;
 
-      if (!matchedUser) {
-        alert("⚠️ Error: This email has not been signed up yet! Please create an account first.");
-        return;
-      }
-
-      localStorage.setItem('nexus_user', matchedUser.username);
-      alert(`✅ Welcome back, ${matchedUser.username}!`);
-      loadMainPage(matchedUser.username);
-    });
-  }
+    auth.signInWithEmailAndPassword(emailInput, passInput)
+      .then((userCredential) => {
+        const username = emailInput.split('@')[0];
+        localStorage.setItem('nexus_user', username);
+        alert("✅ Welcome back!");
+        loadMainPage(username);
+      })
+      .catch((error) => {
+        alert(`⚠️ Login Failed: ${error.message}`);
+      });
+  });
+}
 
   // Sign Up Form Submission
-  if (signupForm) {
-    signupForm.addEventListener('submit', (e) => {
-      e.preventDefault();
+ // Sign Up Form Submission
+if (signupForm) {
+  signupForm.addEventListener('submit', (e) => {
+    e.preventDefault();
 
-      const emailInput = document.getElementById('su-email').value.trim();
-      const userInput = document.getElementById('su-user').value.trim();
-      const passInput = document.getElementById('su-pass').value;
+    const emailInput = document.getElementById('su-email').value.trim();
+    const userInput = document.getElementById('su-user').value.trim();
+    const passInput = document.getElementById('su-pass').value;
 
-      if (!isValidEmail(emailInput)) {
-        alert("⚠️ Error: Please enter a valid email address (e.g., name@example.com).");
-        return;
-      }
+    if (!isValidEmail(emailInput)) {
+      alert("⚠️ Error: Please enter a valid email address.");
+      return;
+    }
 
-      const existingUsers = JSON.parse(localStorage.getItem('nexus_registered_users')) || [];
-      const userExists = existingUsers.some(u => u.username.toLowerCase() === userInput.toLowerCase());
+    if (passInput.length < 6) {
+      alert("⚠️ Error: Password must be at least 6 characters long.");
+      return;
+    }
 
-      if (userExists) {
-        alert(`⚠️ Error: The username "${userInput}" is already taken! Please choose another one.`);
-        return;
-      }
-
-      const emailExists = existingUsers.some(u => u.email.toLowerCase() === emailInput.toLowerCase());
-
-      if (emailExists) {
-        alert(`⚠️ Error: An account with the email "${emailInput}" already exists! Please use a different email or log in.`);
-        return;
-      }
-
-      if (passInput.length < 8) {
-        alert("⚠️ Error: Your password must be at least 8 characters long.");
-        return;
-      }
-
-      const verificationCode = Math.floor(1000 + Math.random() * 9000);
-      alert(`📧 [Simulated Email]: We sent a verification code to ${emailInput}.\nYour code is: ${verificationCode}`);
-
-      const userEnteredCode = prompt("Enter the 4-digit verification code sent to your email:");
-
-      if (userEnteredCode !== verificationCode.toString()) {
-        alert("❌ Incorrect verification code! Sign-up cancelled.");
-        return;
-      }
-
-      existingUsers.push({ username: userInput, email: emailInput, password: passInput });
-      localStorage.setItem('nexus_registered_users', JSON.stringify(existingUsers));
-      localStorage.setItem('nexus_user', userInput);
-
-      alert("✅ Success! Email verified and account created.");
-      loadMainPage(userInput);
-    });
-  }
+    auth.createUserWithEmailAndPassword(emailInput, passInput)
+      .then((userCredential) => {
+        localStorage.setItem('nexus_user', userInput);
+        alert("✅ Account created successfully! You can now log in from any browser.");
+        loadMainPage(userInput);
+      })
+      .catch((error) => {
+        alert(`⚠️ Sign Up Failed: ${error.message}`);
+      });
+  });
+}
 });
 
 // --- 3. MAIN PAGE BUILDER (BOX, SQUARE, CUSTOMIZATION, DRAGGING) ---
