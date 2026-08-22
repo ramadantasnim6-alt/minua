@@ -483,10 +483,51 @@ document.addEventListener('DOMContentLoaded', () => {
   observer.observe(document.body, { childList: true, subtree: true });
 });
 
-// --- 4-PLAYER REALTIME ROOM FEATURE ---
+// --- REAL-TIME MULTIPLAYER ROOM CARDS (MAX 4 PLAYERS) ---
 document.addEventListener('DOMContentLoaded', () => {
   const db = firebase.database();
+  let currentRoomCode = null;
 
+  // Helper to render all joined user cards inside big-box
+  function renderRoomMembers(membersData) {
+    const bigBox = document.getElementById('big-box');
+    if (!bigBox) return;
+
+    // Clear existing guest cards
+    document.querySelectorAll('.remote-player-square').forEach(el => el.remove());
+
+    const myUser = localStorage.getItem('nexus_user') || '';
+    let offsetIndex = 1;
+
+    Object.keys(membersData || {}).forEach((username) => {
+      // Don't duplicate your own local draggable square
+      if (username === myUser) return;
+
+      const profile = membersData[username] || {};
+      const guestSquare = document.createElement('div');
+      guestSquare.className = 'draggable-square remote-player-square';
+      guestSquare.style.cssText = `
+        background: ${profile.squareBg || '#6366f1'};
+        left: ${profile.posX || (50 + offsetIndex * 220)}px;
+        top: ${profile.posY || 50}px;
+        position: absolute;
+        pointer-events: none; /* Guest cards are view-only */
+      `;
+
+      guestSquare.innerHTML = `
+        <div class="square-username">${username}</div>
+        <div class="profile-image-container">
+          ${profile.image ? `<img src="${profile.image}" alt="Profile">` : `<span class="upload-placeholder">📷</span>`}
+        </div>
+        <div class="profile-bio" style="border:none;">${profile.bio || 'In room'}</div>
+      `;
+
+      bigBox.appendChild(guestSquare);
+      offsetIndex++;
+    });
+  }
+
+  // Inject Header Buttons
   const observer = new MutationObserver(() => {
     const header = document.querySelector('.external-header');
     if (header && !document.getElementById('room-controls-wrapper')) {
@@ -508,62 +549,50 @@ document.addEventListener('DOMContentLoaded', () => {
       roomContainer.appendChild(joinBtn);
       header.prepend(roomContainer);
 
-      function generateRoomCode() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 6; i++) {
-          code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return code;
+      function generateCode() {
+        return Math.random().toString(36).substring(2, 8).toUpperCase();
       }
 
-      // Create Room & Sync to Database (Max 4 Members)
-      createBtn.addEventListener('click', () => {
-        const roomCode = generateRoomCode();
-        const currentUser = localStorage.getItem('nexus_user') || 'Host';
+      function joinRoomSession(code) {
+        currentRoomCode = code;
+        const myUser = localStorage.getItem('nexus_user') || 'Player';
+        const myProfileKey = `nexus_profile_${myUser}`;
+        const myProfile = JSON.parse(localStorage.getItem(myProfileKey)) || {};
 
-        db.ref('rooms/' + roomCode).set({
-          host: currentUser,
-          members: [currentUser]
-        }).then(() => {
-          alert(`🎉 Room Created!\n\nRoom Code: ${roomCode}\n\nShare this code with up to 3 friends (Max 4 Players).`);
-          
-          // Listen for new members joining live
-          db.ref('rooms/' + roomCode + '/members').on('value', (snapshot) => {
-            const members = snapshot.val() || [];
-            if (members.length > 1) {
-              const lastMember = members[members.length - 1];
-              alert(`🤝 ${lastMember} joined the room! (${members.length}/4 Players)`);
-            }
-          });
+        // Sync local user profile into the room
+        db.ref(`rooms/${code}/members/${myUser}`).set(myProfile);
+
+        // Listen for other players joining/moving in the room
+        db.ref(`rooms/${code}/members`).on('value', (snapshot) => {
+          const members = snapshot.val() || {};
+          renderRoomMembers(members);
         });
+      }
+
+      // Create Room Event
+      createBtn.addEventListener('click', () => {
+        const code = generateCode();
+        joinRoomSession(code);
+        alert(`🎉 Room Created!\n\nRoom Code: ${code}\n\nShare this code with up to 3 friends.`);
       });
 
-      // Join Existing Room
+      // Join Room Event
       joinBtn.addEventListener('click', () => {
-        const userCode = prompt("Enter the 6-character room code to join:");
+        const userCode = prompt("Enter 6-character room code:");
         if (!userCode) return;
-        
-        const cleanCode = userCode.trim().toUpperCase();
-        const currentUser = localStorage.getItem('nexus_user') || 'Guest';
+        const code = userCode.trim().toUpperCase();
 
-        db.ref('rooms/' + cleanCode).get().then((snapshot) => {
+        db.ref(`rooms/${code}`).get().then((snapshot) => {
           if (snapshot.exists()) {
-            const roomData = snapshot.val();
-            let members = roomData.members || [];
-
-            if (members.length >= 4) {
-              alert("⚠️ This room is full! (4/4 players max)");
-            } else if (members.includes(currentUser)) {
-              alert("ℹ️ You are already in this room!");
+            const members = snapshot.val().members || {};
+            if (Object.keys(members).length >= 4) {
+              alert("⚠️ Room is full (4/4 players max)!");
             } else {
-              members.push(currentUser);
-              db.ref('rooms/' + cleanCode + '/members').set(members).then(() => {
-                alert(`🚀 Joined room ${cleanCode}! (${members.length}/4 Players)`);
-              });
+              joinRoomSession(code);
+              alert(`🚀 Joined room ${code}!`);
             }
           } else {
-            alert("⚠️ Room code not found! Check the code and try again.");
+            alert("⚠️ Room code not found!");
           }
         });
       });
