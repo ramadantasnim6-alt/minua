@@ -127,6 +127,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadMainPage(username) {
+  if (!document.getElementById('cropper-css')) {
+    const css = document.createElement('link');
+    css.id = 'cropper-css';
+    css.rel = 'stylesheet';
+    css.href = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css';
+    document.head.appendChild(css);
+
+    const js = document.createElement('script');
+    js.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js';
+    document.head.appendChild(js);
+  }
+
   const body = document.querySelector('body');
   
   const savedDataKey = `nexus_profile_${username}`;
@@ -141,93 +153,157 @@ function loadMainPage(username) {
   };
 
   body.innerHTML = `
-    <div class="external-header">
-      <div id="room-controls-wrapper" style="display: flex; gap: 8px;">
-        <button id="create-room-btn" class="btn-room" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Create Room ➕</button>
-        <button id="join-room-btn" class="btn-room" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Join Room 🔑</button>
-      </div>
+    <!-- MAIN PAGE VIEW -->
+    <div id="main-page-view">
+      <div class="external-header">
+        <div id="room-controls-wrapper" style="display: flex; gap: 8px;">
+          <button id="create-room-btn" class="btn-room" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Create Room ➕</button>
+          <button id="join-room-btn" class="btn-room" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Join Room 🔑</button>
+        </div>
 
-      <div id="room-status-badge" class="hidden" style="display: flex; align-items: center; gap: 10px; background: #f3f4f6; padding: 4px 12px; border-radius: 20px; border: 1px solid #d1d5db; font-size: 0.85rem;">
-        <span style="color: #374151;">Room: <b id="current-room-display" style="color: #4f46e5;">NONE</b></span>
-        <button id="leave-room-btn" style="padding: 3px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.75rem;">Leave Room 🚪</button>
-      </div>
+        <div id="room-status-badge" class="hidden" style="display: flex; align-items: center; gap: 10px; background: #f3f4f6; padding: 4px 12px; border-radius: 20px; border: 1px solid #d1d5db; font-size: 0.85rem;">
+          <span style="color: #374151;">Room: <b id="current-room-display" style="color: #4f46e5;">NONE</b></span>
+          <button id="leave-room-btn" style="padding: 3px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.75rem;">Leave Room 🚪</button>
+        </div>
 
-      <span class="user-display" style="margin-left: auto;">Logged in as: <b>${username}</b></span>
-      <button id="customize-btn" class="btn-customize">Customize 🎨</button>
-      
-      <div class="settings-wrapper">
+        <span class="user-display" style="margin-left: auto;">Logged in as: <b>${username}</b></span>
+        <button id="customize-btn" class="btn-customize">Customize 🎨</button>
         <button id="settings-btn" class="btn-secondary-custom">Settings ⚙️</button>
-        <div id="settings-dropdown" class="settings-dropdown hidden">
-          <button class="menu-item" id="nav-account">Account Information</button>
-          <button class="menu-item" id="nav-notifications">Notifications</button>
-          <button class="menu-item" id="nav-appearance">Appearance</button>
-          <hr class="menu-divider" />
-          <button class="menu-item logout-item" id="logout-btn">Log Out</button>
-        </div>
       </div>
-    </div>
 
-    <div id="custom-modal" class="custom-modal hidden">
-      <div class="modal-content">
-        <h3>Customize Your Space</h3>
-        <div class="custom-section">
-          <label>Outside Box Background Color</label>
-          <input type="color" id="picker-page-bg" value="${savedProfile.pageBg}">
-        </div>
-        <div class="custom-section">
-          <label>Big Box Background Color</label>
-          <input type="color" id="picker-box-bg" value="${savedProfile.boxBg}">
-        </div>
-        <div class="custom-section">
-          <label>Square Background Color</label>
-          <input type="color" id="picker-square-bg" value="${savedProfile.squareBg}">
-        </div>
-        <div class="custom-section">
-          <label>Square Profile Picture</label>
-          <button id="modal-upload-btn" class="btn-secondary-custom">Upload Photo</button>
-          <input type="file" id="modal-image-upload" accept="image/*" style="display: none;">
-        </div>
-        <button id="close-modal-btn" class="btn-primary-custom">Done</button>
-      </div>
-    </div>
-
-    <div class="blank-main-page" id="page-wrapper" style="background: ${savedProfile.pageBg};">
-      <div class="big-box" id="big-box" style="background: ${savedProfile.boxBg};">
-        <div class="draggable-square" id="draggable-square" style="background: ${savedProfile.squareBg}; left: ${savedProfile.posX || 50}px; top: ${savedProfile.posY || 50}px;">
-          <div class="square-username">${username}</div>
-          <input type="file" id="image-upload" accept="image/*" style="display: none;">
-          <div class="profile-image-container" id="upload-trigger" title="Click to upload image">
-            ${savedProfile.image ? `<img src="${savedProfile.image}" alt="Profile Image">` : `<span class="upload-placeholder">📷</span>`}
+      <div id="custom-modal" class="custom-modal hidden">
+        <div class="modal-content">
+          <h3>Customize Your Space</h3>
+          <div class="custom-section">
+            <label>Outside Box Background Color</label>
+            <input type="color" id="picker-page-bg" value="${savedProfile.pageBg}">
           </div>
-          <div class="profile-bio" id="profile-bio" contenteditable="true" placeholder="Add your bio...">${savedProfile.bio || ''}</div>
+          <div class="custom-section">
+            <label>Big Box Background Color</label>
+            <input type="color" id="picker-box-bg" value="${savedProfile.boxBg}">
+          </div>
+          <div class="custom-section">
+            <label>Square Background Color</label>
+            <input type="color" id="picker-square-bg" value="${savedProfile.squareBg}">
+          </div>
+          <div class="custom-section">
+            <label>Square Profile Picture</label>
+            <button id="modal-upload-btn" class="btn-secondary-custom">Upload Photo</button>
+            <input type="file" id="modal-image-upload" accept="image/*" style="display: none;">
+          </div>
+          <button id="close-modal-btn" class="btn-primary-custom">Done</button>
+        </div>
+      </div>
+
+      <div class="blank-main-page" id="page-wrapper" style="background: ${savedProfile.pageBg};">
+        <div class="big-box" id="big-box" style="background: ${savedProfile.boxBg};">
+          <div class="draggable-square" id="draggable-square" style="background: ${savedProfile.squareBg}; left: ${savedProfile.posX || 50}px; top: ${savedProfile.posY || 50}px;">
+            <div class="square-username">${username}</div>
+            <input type="file" id="image-upload" accept="image/*" style="display: none;">
+            <div class="profile-image-container" id="upload-trigger" title="Click to upload image">
+              ${savedProfile.image ? `<img src="${savedProfile.image}" alt="Profile Image">` : `<span class="upload-placeholder">📷</span>`}
+            </div>
+            <div class="profile-bio" id="profile-bio" contenteditable="true" placeholder="Add your bio...">${savedProfile.bio || ''}</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="room-chat-box" class="chat-box hidden minimized">
+        <div id="chat-header" class="chat-header">
+          <span>Room Chat</span>
+          <button id="chat-toggle-btn" class="chat-toggle-btn">▲</button>
+        </div>
+        <div id="chat-body" class="chat-body">
+          <div id="chat-messages" class="chat-messages"></div>
+          <form id="chat-form" class="chat-form">
+            <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" />
+            <button type="submit">Send</button>
+          </form>
         </div>
       </div>
     </div>
-  <div id="room-chat-box" class="chat-box hidden minimized">
-  <div id="chat-header" class="chat-header">
-    <span>Room Chat</span>
-    <button id="chat-toggle-btn" class="chat-toggle-btn">▲</button>
-  </div>
-  <div id="chat-body" class="chat-body">
-    <div id="chat-messages" class="chat-messages"></div>
-    <form id="chat-form" class="chat-form">
-      <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" />
-      <button type="submit">Send</button>
-    </form>
-  </div>
-</div>
-`;
+
+    <!-- SETTINGS PAGE VIEW -->
+    <div id="settings-page-view" class="hidden">
+      <button id="back-from-settings" class="btn-back">← Back</button>
+      <h2>Settings</h2>
+
+      <!-- Account Info -->
+      <div class="settings-section">
+        <h3>Account Information</h3>
+        <button id="change-username-btn" class="settings-btn-item">Change Username</button>
+        <button id="change-password-btn" class="settings-btn-item">Change Password</button>
+        <button id="change-email-btn" class="settings-btn-item">Change Email</button>
+        
+        <div class="avatar-upload-group">
+          <label style="font-weight:600; display:block; margin-top:8px; margin-bottom:4px;">Change Profile Picture:</label>
+          <input type="file" id="cropper-file-input" accept="image/*">
+          <div id="cropper-wrapper" class="hidden">
+            <img id="cropper-image-preview" src="" alt="Preview">
+            <button id="crop-save-btn" class="btn-back" style="margin-top:10px;">Save Cropped Picture</button>
+          </div>
+        </div>
+        <button class="settings-btn-item logout-item" id="logout-btn" style="margin-top:10px;">Log Out</button>
+      </div>
+
+      <!-- Notifications -->
+      <div class="settings-section">
+        <h3>Notifications</h3>
+        <label style="display:flex; gap:10px; align-items:center; font-size:0.9rem;">
+          <input type="checkbox" id="notify-friend-req" checked>
+          Notify when someone adds you as a friend
+        </label>
+      </div>
+
+      <!-- Customization -->
+      <div class="settings-section">
+        <h3>Personal Customization</h3>
+        
+        <div class="picker-group">
+          <label>Outside Box Background:</label>
+          <input type="color" id="settings-outside-bg" value="${savedProfile.pageBg}">
+        </div>
+        <div class="picker-group">
+          <label>Outside Box Gradient (optional):</label>
+          <input type="text" id="gradient-outside-bg" placeholder="linear-gradient(...)">
+        </div>
+
+        <div class="picker-group">
+          <label>Big Box Background:</label>
+          <input type="color" id="settings-big-box-bg" value="${savedProfile.boxBg}">
+        </div>
+        <div class="picker-group">
+          <label>Big Box Gradient (optional):</label>
+          <input type="text" id="gradient-big-box-bg" placeholder="linear-gradient(...)">
+        </div>
+
+        <div class="picker-group">
+          <label>Square Background:</label>
+          <input type="color" id="settings-square-bg" value="${savedProfile.squareBg}">
+        </div>
+
+        <hr class="section-divider">
+
+        <h3>Room Customizations</h3>
+        <p class="subtext">(Room Host Only)</p>
+        
+        <div class="picker-group">
+          <label>Room Background Color:</label>
+          <input type="color" id="picker-room-bg" value="#ffffff">
+        </div>
+
+        <div class="picker-group">
+          <label>Chat Box Color:</label>
+          <input type="color" id="picker-chat-bg" value="#4f46e5">
+        </div>
+      </div>
+    </div>
+  `;
+
   const mainStyle = document.createElement('style');
   mainStyle.innerHTML = `
     .blank-main-page { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; transition: background 0.2s; }
     .external-header { position: absolute; top: 1px; right: 20px; left: 20px; display: flex; align-items: center; gap: 12px; z-index: 100; font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #333333; }
-    .settings-wrapper { position: relative; display: inline-block; }
-    .settings-dropdown { position: absolute; top: 110%; right: 0; width: 180px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); padding: 6px; z-index: 200; display: flex; flex-direction: column; gap: 2px; }
-    .menu-item { background: transparent; border: none; color: #374151; padding: 8px 10px; text-align: left; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.2s; }
-    .menu-item:hover { background: #f3f4f6; }
-    .menu-divider { border: none; border-top: 1px solid #e5e7eb; margin: 4px 0; }
-    .logout-item { color: #ef4444; font-weight: 600; }
-    .logout-item:hover { background: #fef2f2; color: #dc2626; }
     .btn-customize { padding: 6px 12px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
     .btn-customize:hover { background: #4f46e5; }
     .btn-secondary-custom { padding: 6px 12px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; font-weight: 600; cursor: pointer; color: #374151; }
@@ -254,6 +330,7 @@ function loadMainPage(username) {
   `;
   document.head.appendChild(mainStyle);
 
+  // Element Selectors
   const square = document.getElementById('draggable-square');
   const bigBox = document.getElementById('big-box');
   const pageWrapper = document.getElementById('page-wrapper');
@@ -273,24 +350,135 @@ function loadMainPage(username) {
   const modalImageUpload = document.getElementById('modal-image-upload');
 
   const settingsBtn = document.getElementById('settings-btn');
-  const settingsDropdown = document.getElementById('settings-dropdown');
+  const backBtn = document.getElementById('back-from-settings');
 
   const roomStatusBadge = document.getElementById('room-status-badge');
   const currentRoomDisplay = document.getElementById('current-room-display');
   const leaveRoomBtn = document.getElementById('leave-room-btn');
-
-  settingsBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    settingsDropdown.classList.toggle('hidden');
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!settingsDropdown.contains(e.target) && e.target !== settingsBtn) {
-      settingsDropdown.classList.add('hidden');
-    }
-  });
   var chatListenerRef = null;
 
+  // Settings View Page Toggle Navigation
+  settingsBtn.addEventListener('click', () => {
+    document.getElementById('main-page-view').classList.add('hidden');
+    document.getElementById('settings-page-view').classList.remove('hidden');
+  });
+
+  backBtn.addEventListener('click', () => {
+    document.getElementById('settings-page-view').classList.add('hidden');
+    document.getElementById('main-page-view').classList.remove('hidden');
+  });
+
+  // Account Information Button Handlers
+  document.getElementById('change-username-btn')?.addEventListener('click', () => {
+    const newName = prompt("Enter your new username:");
+    if (newName) alert(`Username updated to: ${newName}`);
+  });
+
+  document.getElementById('change-password-btn')?.addEventListener('click', () => {
+    const newPass = prompt("Enter your new password:");
+    if (newPass) alert("Password updated successfully!");
+  });
+
+  document.getElementById('change-email-btn')?.addEventListener('click', () => {
+    const newEmail = prompt("Enter your new email address:");
+    if (newEmail) alert(`Email updated to: ${newEmail}`);
+  });
+
+  // Cropper Image Handling
+  let cropperInstance = null;
+  const fileInput = document.getElementById('cropper-file-input');
+  const cropperImg = document.getElementById('cropper-image-preview');
+  const cropperWrapper = document.getElementById('cropper-wrapper');
+
+  fileInput?.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      cropperImg.src = event.target.result;
+      cropperWrapper.classList.remove('hidden');
+
+      if (cropperInstance) cropperInstance.destroy();
+      cropperInstance = new Cropper(cropperImg, {
+        aspectRatio: 1,
+        viewMode: 1
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('crop-save-btn')?.addEventListener('click', () => {
+    if (!cropperInstance) return;
+    const canvas = cropperInstance.getCroppedCanvas({ width: 150, height: 150 });
+    const croppedDataUrl = canvas.toDataURL();
+
+    uploadTrigger.innerHTML = `<img src="${croppedDataUrl}" alt="Profile Image">`;
+    saveProfileState();
+
+    cropperInstance.destroy();
+    cropperWrapper.classList.add('hidden');
+    alert("Profile picture updated!");
+  });
+
+  // Lighten Hex Color Helper
+  function lightenColor(hex, percent) {
+    let num = parseInt(hex.replace("#",""), 16),
+        amt = Math.round(2.55 * percent),
+        R = (num >> 16) + amt,
+        B = (num >> 8 & 0x00FF) + amt,
+        G = (num & 0x0000FF) + amt;
+
+    return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (B<255?B<1?0:B:255)*0x100 + (G<255?G<1?0:G:255)).toString(16).slice(1);
+  }
+
+  // Color & Gradient Customization Listeners
+  document.getElementById('settings-outside-bg')?.addEventListener('input', (e) => {
+    const baseColor = e.target.value;
+    const lighterColor = lightenColor(baseColor, 35);
+
+    pageWrapper.style.background = baseColor;
+    
+    document.getElementById('create-room-btn').style.backgroundColor = lighterColor;
+    document.getElementById('join-room-btn').style.backgroundColor = lighterColor;
+    document.getElementById('leave-room-btn').style.backgroundColor = lighterColor;
+    
+    saveProfileState();
+  });
+
+  document.getElementById('gradient-outside-bg')?.addEventListener('input', (e) => {
+    if (e.target.value.trim() !== '') {
+      pageWrapper.style.background = e.target.value;
+    }
+  });
+
+  document.getElementById('settings-big-box-bg')?.addEventListener('input', (e) => {
+    bigBox.style.background = e.target.value;
+    saveProfileState();
+  });
+
+  document.getElementById('gradient-big-box-bg')?.addEventListener('input', (e) => {
+    if (e.target.value.trim() !== '') {
+      bigBox.style.background = e.target.value;
+    }
+  });
+
+  document.getElementById('settings-square-bg')?.addEventListener('input', (e) => {
+    square.style.background = e.target.value;
+    saveProfileState();
+  });
+
+  document.getElementById('picker-room-bg')?.addEventListener('input', (e) => {
+    if (currentRoomCode) {
+      bigBox.style.background = e.target.value;
+    }
+  });
+
+  document.getElementById('picker-chat-bg')?.addEventListener('input', (e) => {
+    document.getElementById('chat-header').style.backgroundColor = e.target.value;
+  });
+
+  // Chat Listeners
   const chatBox = document.getElementById('room-chat-box');
   const chatHeader = document.getElementById('chat-header');
   const chatToggleBtn = document.getElementById('chat-toggle-btn');
@@ -371,7 +559,7 @@ function loadMainPage(username) {
     }
   });
 
-  // DRAGGING SYSTEM (Desktop + Mobile)
+  // DRAGGING SYSTEM
   let isDragging = false;
   let startX, startY;
 
@@ -480,7 +668,6 @@ function loadMainPage(username) {
       image: imgEl ? imgEl.src : ''
     };
 
-    // Update Header Status & URL
     currentRoomDisplay.innerText = code;
     roomStatusBadge.classList.remove('hidden');
     window.location.hash = code;
@@ -493,7 +680,7 @@ function loadMainPage(username) {
     roomListenerRef.on('value', (snapshot) => {
       renderRoomMembers(snapshot.val() || {});
     });
-    // --- PASTE PART B HERE ---
+
     chatBox.classList.remove('hidden');
 
     chatListenerRef = db.ref(`rooms/${code}/messages`);
@@ -517,14 +704,12 @@ function loadMainPage(username) {
     roomStatusBadge.classList.add('hidden');
     currentRoomDisplay.innerText = "NONE";
     
-    // Clear URL Hash back to main page
     history.pushState("", document.title, window.location.pathname + window.location.search);
 
-    // Remove all remote player cards
     document.querySelectorAll('.remote-player-square').forEach(el => el.remove());
     chatBox.classList.add('hidden');
-  chatMessages.innerHTML = '';
-  if (chatListenerRef) chatListenerRef.off();
+    chatMessages.innerHTML = '';
+    if (chatListenerRef) chatListenerRef.off();
   }
 
   leaveRoomBtn.addEventListener('click', () => {
@@ -562,7 +747,6 @@ function loadMainPage(username) {
     });
   });
 
-  // AUTO-JOIN via URL Link hash (e.g. site.com/#T6YU89)
   const initialHash = window.location.hash.replace('#', '').trim().toUpperCase();
   if (initialHash && initialHash.length === 6) {
     db.ref(`rooms/${initialHash}`).get().then((snapshot) => {
