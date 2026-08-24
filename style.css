@@ -155,7 +155,7 @@ body {
   padding: 12px 14px;
   background: #121318;
   border: 1px solid #2d313d;
-  border-radius: 10px;
+  border-radius: 1px;
   color: #ffffff;
   font-size: 0.95rem;
   outline: none;
@@ -182,4 +182,107 @@ body {
 
 .hidden {
   display: none !important;
+}
+.chat-box {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 280px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  transition: height 0.3s ease;
+}
+
+.chat-box.minimized {
+  height: 40px;
+}
+
+.chat-box:not(.minimized) {
+  height: 320px;
+}
+
+.chat-header {
+  background: #4f46e5;
+  color: #ffffff;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.chat-toggle-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.chat-body {
+  display: flex;
+  flex-direction: column;
+  height: 280px;
+  background: #f9fafb;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.chat-message {
+  background: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  word-break: break-word;
+}
+
+.chat-message .author {
+  font-weight: bold;
+  color: #4f46e5;
+  margin-right: 4px;
+}
+
+.chat-form {
+  display: flex;
+  border-top: 1px solid #e5e7eb;
+  padding: 6px;
+  background: #ffffff;
+}
+
+.chat-form input {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 6px;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.chat-form button {
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin-left: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
