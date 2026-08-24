@@ -1,12 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-html {
-  zoom: 90%;
-  transform: scale(0.9);
-  transform-origin: 0 0;
-  width: 111.11%;
-}
 
-/* your existing CSS continues below here */
 
 * {
   box-sizing: border-box;
