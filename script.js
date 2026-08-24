@@ -203,8 +203,20 @@ function loadMainPage(username) {
         </div>
       </div>
     </div>
-  `;
-
+  <div id="room-chat-box" class="chat-box hidden minimized">
+  <div id="chat-header" class="chat-header">
+    <span>💬 Room Chat</span>
+    <button id="chat-toggle-btn" class="chat-toggle-btn">▲</button>
+  </div>
+  <div id="chat-body" class="chat-body">
+    <div id="chat-messages" class="chat-messages"></div>
+    <form id="chat-form" class="chat-form">
+      <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+</div>
+`;
   const mainStyle = document.createElement('style');
   mainStyle.innerHTML = `
     .blank-main-page { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; transition: background 0.2s; }
@@ -276,6 +288,33 @@ function loadMainPage(username) {
     if (!settingsDropdown.contains(e.target) && e.target !== settingsBtn) {
       settingsDropdown.classList.add('hidden');
     }
+  });
+  var chatListenerRef = null;
+
+  const chatBox = document.getElementById('room-chat-box');
+  const chatHeader = document.getElementById('chat-header');
+  const chatToggleBtn = document.getElementById('chat-toggle-btn');
+  const chatForm = document.getElementById('chat-form');
+  const chatInput = document.getElementById('chat-input');
+  const chatMessages = document.getElementById('chat-messages');
+
+  chatHeader.addEventListener('click', () => {
+    chatBox.classList.toggle('minimized');
+    chatToggleBtn.innerText = chatBox.classList.contains('minimized') ? '▲' : '▼';
+  });
+
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const msgText = chatInput.value.trim();
+    if (!msgText || !window.currentRoomCode) return;
+
+    db.ref(`rooms/${window.currentRoomCode}/messages`).push({
+      sender: username,
+      text: msgText,
+      timestamp: Date.now()
+    });
+
+    chatInput.value = '';
   });
 
   function saveProfileState() {
@@ -454,6 +493,18 @@ function loadMainPage(username) {
     roomListenerRef.on('value', (snapshot) => {
       renderRoomMembers(snapshot.val() || {});
     });
+    // --- PASTE PART B HERE ---
+    chatBox.classList.remove('hidden');
+
+    chatListenerRef = db.ref(`rooms/${code}/messages`);
+    chatListenerRef.on('child_added', (snapshot) => {
+      const msg = snapshot.val();
+      const msgEl = document.createElement('div');
+      msgEl.className = 'chat-message';
+      msgEl.innerHTML = `<span class="author">${msg.sender}:</span> <span>${msg.text}</span>`;
+      chatMessages.appendChild(msgEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
   }
 
   function leaveRoomSession() {
@@ -471,6 +522,9 @@ function loadMainPage(username) {
 
     // Remove all remote player cards
     document.querySelectorAll('.remote-player-square').forEach(el => el.remove());
+    chatBox.classList.add('hidden');
+  chatMessages.innerHTML = '';
+  if (chatListenerRef) chatListenerRef.off();
   }
 
   leaveRoomBtn.addEventListener('click', () => {
