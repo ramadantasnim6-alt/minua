@@ -374,3 +374,105 @@ body {
   max-width: 100%;
   display: block;
 }
+
+/* ==========================================
+   MOBILE-ONLY OVERRIDES (Paste at bottom of style.css)
+   ========================================== */
+@media (max-width: 600px) {
+  /* Prevent side-scrolling on phones */
+  html, body {
+    overflow-x: hidden;
+    touch-action: manipulation;
+  }
+
+  /* Make top header stack cleanly on smaller screens */
+  .external-header {
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .user-display {
+    width: 100%;
+    margin-left: 0;
+    order: -1;
+  }
+
+  /* Resize the main workspace box for small screens */
+  .blank-main-page {
+    height: auto;
+    min-height: calc(100vh - 80px);
+  }
+
+  .big-box {
+    width: 95vw;
+    height: 75vh;
+    margin-top: 0;
+  }
+
+  /* Scale down draggable cards so they fit phone screens */
+  .draggable-square {
+    width: 150px;
+    height: 190px;
+    padding: 8px;
+  }
+
+  .profile-image-container {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 6px;
+  }
+
+  .square-username {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+
+  .profile-bio {
+    font-size: 0.75rem;
+    padding: 4px;
+  }
+
+  /* Snap chat box to the bottom edges on mobile */
+  .chat-box {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: auto;
+  }
+
+  .chat-body {
+    height: 180px;
+  }
+
+  /* Stack input options vertically in Settings */
+  #settings-page-view {
+    width: 95%;
+    padding: 8px;
+    margin: 10px auto;
+  }
+
+  .picker-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .picker-group input[type="text"],
+  .picker-group input[type="color"] {
+    width: 100%;
+  }
+
+  /* Increase button heights for finger taps */
+  .settings-btn-item,
+  .btn-back,
+  .btn-room,
+  .btn-customize {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+}
