@@ -205,7 +205,7 @@ function loadMainPage(username) {
     </div>
   <div id="room-chat-box" class="chat-box hidden minimized">
   <div id="chat-header" class="chat-header">
-    <span>💬 Room Chat</span>
+    <span>Room Chat</span>
     <button id="chat-toggle-btn" class="chat-toggle-btn">▲</button>
   </div>
   <div id="chat-body" class="chat-body">
