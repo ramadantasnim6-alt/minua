@@ -220,7 +220,7 @@ function loadMainPage(username) {
   const mainStyle = document.createElement('style');
   mainStyle.innerHTML = `
     .blank-main-page { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; transition: background 0.2s; }
-    .external-header { position: absolute; top: 15px; right: 20px; left: 20px; display: flex; align-items: center; gap: 12px; z-index: 100; font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #333333; }
+    .external-header { position: absolute; top: 8px; right: 20px; left: 20px; display: flex; align-items: center; gap: 12px; z-index: 100; font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #333333; }
     .settings-wrapper { position: relative; display: inline-block; }
     .settings-dropdown { position: absolute; top: 110%; right: 0; width: 180px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); padding: 6px; z-index: 200; display: flex; flex-direction: column; gap: 2px; }
     .menu-item { background: transparent; border: none; color: #374151; padding: 8px 10px; text-align: left; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.2s; }
