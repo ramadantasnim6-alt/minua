@@ -185,8 +185,8 @@ body {
 }
 .chat-box {
   position: fixed;
-  bottom: 22px;
-  right: 8px;
+  bottom: 31px;
+  right: 12px;
   width: 280px;
   background: #766aff;
   border: 2px solid #000000;
