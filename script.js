@@ -157,13 +157,13 @@ function loadMainPage(username) {
     <div id="main-page-view">
       <div class="external-header">
         <div id="room-controls-wrapper" style="display: flex; gap: 8px;">
-          <button id="create-room-btn" class="btn-room" style="padding: 6px 12px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Create Room ➕</button>
-          <button id="join-room-btn" class="btn-room" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Join Room 🔑</button>
+          <button id="create-room-btn" class="btn-room" style="padding: 6px 12px; background: #ffffff; color: black; border: 2px solid #000000; border-radius: 1px; cursor: pointer; font-weight: 600;">Create Room</button>
+          <button id="join-room-btn" class="btn-room" style="padding: 6px 12px; background: #ffffff; color: black; border: 2px solid #000000; border-radius: 1px; cursor: pointer; font-weight: 600;">Join Room</button>
         </div>
 
-        <div id="room-status-badge" class="hidden" style="display: flex; align-items: center; gap: 10px; background: #f3f4f6; padding: 4px 12px; border-radius: 20px; border: 1px solid #d1d5db; font-size: 0.85rem;">
+        <div id="room-status-badge" class="hidden" style="display: flex; align-items: center; gap: 10px; background: #ffffff; padding: 4px 12px; border-radius: 20px; border: 1px solid #d1d5db; font-size: 0.85rem;">
           <span style="color: #374151;">Room: <b id="current-room-display" style="color: #4f46e5;">NONE</b></span>
-          <button id="leave-room-btn" style="padding: 3px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.75rem;">Leave Room 🚪</button>
+          <button id="leave-room-btn" style="padding: 3px 8px; background: #ffffff; color: black; border: 1px solid #000000 border-radius: 1px; cursor: pointer; font-weight: 600; font-size: 0.75rem;">Leave Room</button>
         </div>
 
         <span class="user-display" style="margin-left: auto;">Logged in as: <b>${username}</b></span>
@@ -317,7 +317,7 @@ function loadMainPage(username) {
     .btn-primary-custom { padding: 12px; background: #6366f1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
     .btn-primary-custom:hover { background: #4f46e5; }
     .big-box { width: 97vw; height: 90vh; border: 2px solid #000000; border-radius: 1px; position: relative; overflow: hidden; transition: background 0.2s; touch-action: none; }
-    .draggable-square { width: 200px; height: 240px; border: 2px solid #000000; border-radius: 1px; position: absolute; cursor: grab; display: flex; flex-direction: column; align-items: center; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); transition: background 0.2s; touch-action: none; }
+    .draggable-square { width: 200px; height: 240px; border: 2px solid #000000; border-radius: 1px; position: absolute; cursor: grab; display: flex; flex-direction: column; align-items: center; padding: 15px; transition: background 0.2s; touch-action: none; }
     .draggable-square:active { cursor: grabbing; }
     .square-username { font-weight: bold; margin-bottom: 10px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); pointer-events: none; }
     .profile-image-container { width: 70px; height: 70px; background: #ffffff; border: 2px dashed #333333; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; overflow: hidden; margin-bottom: 12px; flex-shrink: 0; transition: border-color 0.2s; }
