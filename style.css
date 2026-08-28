@@ -9,7 +9,7 @@
 }
 
 body {
-  background-color: #0f1015;
+  background-color: #ffd15b;
   color: #ffffff;
   display: flex;
   justify-content: center;
@@ -23,10 +23,10 @@ body {
   grid-template-columns: 1.2fr 1fr;
   width: 900px;
   max-width: 90%;
-  background: #181a20;
-  border-radius: 20px;
+  background: #766aff;
+  border-radius: 2px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  border: 1px solid #262935;
+  border: 3px solid #000000;
   overflow: hidden;
 }
 
@@ -58,7 +58,7 @@ body {
 }
 
 .tagline {
-  color: #9ca3af;
+  color: #766aff;
   font-size: 1.05rem;
   line-height: 1.6;
   margin-bottom: 30px;
@@ -77,13 +77,13 @@ body {
 }
 
 .action-card {
-  background: #1f224b;
+  background: #6356EB;
   padding: 50px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   width: 100%;
-  border-top: 3px solid #262935;
+  border-top: 3px solid #000000;
 }
 
 .view h2 {
@@ -106,35 +106,37 @@ body {
 .btn-primary {
   flex: 1;
   padding: 14px;
-  background: #6366f1;
-  color: white;
+  background: #ffffff;
+  color: black;
   border: none;
-  border-radius: 10px;
+  border-radius: 1px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
+   border: 4px solid #262935;
 }
 
 .btn-primary:hover {
-  background: #4f46e5;
+  background: #FFC229;
 }
 
 .btn-secondary {
   flex: 1;
   padding: 14px;
-  background: #2d313d;
-  color: white;
+  background: #ffffff;
+  color: black;
   border: none;
-  border-radius: 10px;
+  border-radius: 1px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
+  border: 4px solid #262935;
 }
 
 .btn-secondary:hover {
-  background: #374151;
+  background: #FFC229;
 }
 
 .input-group {
