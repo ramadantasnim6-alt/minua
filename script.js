@@ -161,7 +161,7 @@ function loadMainPage(username) {
           <button id="join-room-btn" class="btn-room" style="padding: 6px 12px; background: #ffffff; color: black; border: 2px solid #000000; border-radius: 1px; cursor: pointer; font-weight: 600;">Join Room</button>
         </div>
 
-        <div id="room-status-badge" class="hidden" style="display: flex; align-items: center; gap: 10px; background: #ffffff; padding: 4px 12px; border-radius: 1px; border: 1px solid #d1d5db; font-size: 0.85rem;">
+        <div id="room-status-badge" class="hidden" style="display: flex; align-items: center; gap: 10px; background: #ffffff; padding: 4px 12px; border-radius: 1px; border: 4px solid #000000; font-size: 0.85rem;">
           <span style="color: #374151;">Room: <b id="current-room-display" style="color: #4f46e5;">NONE</b></span>
           <button id="leave-room-btn" style="padding: 3px 8px; background: #ffffff; color: black; border: 1px solid #000000 border-radius: 1px; cursor: pointer; font-weight: 600; font-size: 0.75rem;">Leave Room</button>
         </div>
