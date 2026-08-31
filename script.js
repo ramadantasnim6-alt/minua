@@ -612,7 +612,13 @@ function loadMainPage(username) {
   bioElement.addEventListener('input', () => saveProfileState());
   logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('nexus_user');
-    location.reload();
+    
+    auth.signOut().then(() => {
+      location.reload();
+    }).catch((error) => {
+      console.error("Sign out error:", error);
+      location.reload();
+    });
   });
 
   function renderRoomMembers(membersData) {
